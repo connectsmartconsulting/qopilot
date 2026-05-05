@@ -151,7 +151,7 @@ def render_markdown(output: AuthorOutput) -> str:
     lines.append("## Recommended checks")
     lines.append("")
     for i, rec in enumerate(output.recommended_checks, 1):
-        status_label = "LIVE" if rec.aigrc_status == "live" else f"PLANNED"
+        status_label = "LIVE" if rec.aigrc_status == "live" else "PLANNED"
         lines.append(f"### {i}. `{rec.check_id}` ({status_label}, priority: {rec.priority})")
         lines.append("")
         lines.append(f"**Regulatory rationale:** {rec.regulatory_rationale}")

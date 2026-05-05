@@ -1,7 +1,5 @@
 """Tests for Qopilot - offline only to avoid API calls in CI."""
 
-import json
-from pathlib import Path
 
 from qopilot.author import render_markdown as render_author_md
 from qopilot.author import run as run_author
