@@ -65,14 +65,33 @@ def interpret(
     offline: bool = typer.Option(False, "--offline", help="Use deterministic offline renderer"),
 ):
     """Translate an aigrc JSON report into a business-language audit narrative."""
+
     if not report.exists():
         console.print(f"[red]Report not found: {report}[/red]")
+        console.print(f"[dim]Generate one with: aigrc check prompt-injection --target mock://moderate --report-json {report}[/dim]")
+        raise typer.Exit(code=2)
+
+    raw = report.read_text(encoding="utf-8")
+    if not raw.strip():
+        console.print(f"[red]Report file is empty: {report}[/red]")
+        console.print("[dim]Re-run the aigrc check to regenerate it.[/dim]")
         raise typer.Exit(code=2)
 
     try:
-        data = json.loads(report.read_text())
-    except Exception as e:
-        console.print(f"[red]Invalid JSON: {e}[/red]")
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        console.print(f"[red]Invalid JSON in {report}: line {e.lineno}, column {e.colno}[/red]")
+        console.print(f"[dim]Generate a fresh report: aigrc check prompt-injection --target mock://moderate --report-json {report}[/dim]")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print(f"[red]Report contains {type(data).__name__}, expected a JSON object.[/red]")
+        raise typer.Exit(code=2)
+
+    missing = [k for k in ("check_id", "payloads") if k not in data]
+    if missing:
+        console.print(f"[red]Report missing required fields: {', '.join(missing)}[/red]")
+        console.print("[dim]This may be a partial write — re-run the aigrc check to regenerate.[/dim]")
         raise typer.Exit(code=2)
 
     provider = autodetect_provider(offline=offline)
