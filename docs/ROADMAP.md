@@ -1,8 +1,8 @@
 # Roadmap
 
-## v0.1 (released April 2026) - current
+## v0.1.0 (released May 2026) - current
 
-`author` and `interpret` commands working end to end against Anthropic and OpenAI-compatible providers. Deterministic offline fallback.
+`author` and `interpret` commands working end to end. Deterministic offline renderer (no API key required). LLM-enhanced output via Anthropic and OpenAI-compatible providers. 7 tests passing.
 
 ## v0.2 (target Q3 2026)
 
@@ -15,6 +15,7 @@
 - `qopilot trend` - analyse a time series of aigrc reports for drift detection
 - DOCX export for client deliverables that require Word format
 - Templating hooks so consultancies can brand the output
+- RES (Resilience Engineering Scorecard) narrative - Qopilot interpret layer for composite resilience scores produced by aigrc RES module. Design begins Q3 2026 after first client engagement.
 
 ## v0.4 (target Q1 2027)
 
