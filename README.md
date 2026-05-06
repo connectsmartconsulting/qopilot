@@ -1,127 +1,185 @@
 # Qopilot
 
-**AI copilot for AI assurance.**
+**AI Assurance Copilot for aigrc**
 
-Qopilot is the AI layer that sits alongside [aigrc](https://github.com/connectsmartconsulting/aigrc). It does two things:
+[![CI](https://github.com/connectsmartconsulting/qopilot/actions/workflows/ci.yml/badge.svg)](https://github.com/connectsmartconsulting/qopilot/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.1.0-orange.svg)]()
 
-1. **`qopilot author`** reads a plain-English description of a client's AI system and recommends which aigrc checks to run, with regulatory rationale.
-2. **`qopilot interpret`** reads an aigrc JSON report and produces a business-language audit narrative with prioritised remediation guidance.
+> **v0.1.0** - Two commands: `author` recommends which aigrc checks to run, `interpret` turns aigrc JSON reports into business-language audit narratives. Works fully offline. LLM-enhanced output available with an Anthropic or OpenAI API key.
 
-Built on four principles drawn from two decades of quality engineering:
+Qopilot is the advisory layer on top of [aigrc](https://github.com/connectsmartconsulting/aigrc). It answers two questions:
 
-1. Fail explicitly, never silently.
-2. Every output is reproducible given the same input and model.
-3. Human-readable and machine-readable outputs are produced in parallel.
-4. CI-native by default, no hosted service required.
+- **Before a check:** Which aigrc checks should this client run, and why?
+- **After a check:** What do these results mean for the risk committee and regulator?
 
-Maintained by [Connect Smart Consulting Inc.](https://github.com/connectsmartconsulting).
+Built by [Connect Smart Consulting Inc.](https://connectsmartconsulting.com) - Ottawa, Ontario, Canada.
 
-## Why a separate tool?
+---
 
-aigrc executes checks and produces deterministic evidence. That evidence is auditable but not narrative. It says "15 of 18 payloads passed". It does not say "your bot leaks its system prompt under base64 framing, which creates regulatory exposure under EU AI Act Article 15 and should be remediated by adding a refusal pattern for encoded instructions".
-
-Qopilot is where that translation happens. Keeping it separate means:
-
-- aigrc remains deterministic and reproducible for audit defensibility.
-- The LLM calls (which introduce cost and non-determinism) are opt-in.
-- Clients with strict data-residency requirements can run aigrc without ever invoking an external model.
-
-## Honest v0.1 scope
-
-Two commands, end to end, working against the Anthropic API or any OpenAI-compatible endpoint. Offline deterministic mode available for testing and demos.
-
-| Capability | Status |
-|---|---|
-| `qopilot author` - recommend aigrc checks from system description | Live |
-| `qopilot interpret` - business narrative + remediation from aigrc report | Live |
-| Anthropic API provider | Live |
-| OpenAI-compatible provider | Live |
-| Offline deterministic provider (for CI and demos) | Live |
-| Additional output formats (PDF, DOCX) | v0.2 |
-| Multi-report trend analysis (`qopilot compare`) | v0.3 |
-
-## Quickstart
+## Quick start
 
 ```bash
-pip install qopilot
-
-# Either provider works; Qopilot picks the first one it finds
-export ANTHROPIC_API_KEY=sk-ant-...
-# or
-export OPENAI_API_KEY=sk-...
-
-# Recommend checks for a client system
-qopilot author --input examples/acme-system.md --out acme-recs.md
-
-# Interpret an aigrc report
-qopilot interpret --report aigrc-report.json --out acme-narrative.md
+git clone https://github.com/connectsmartconsulting/qopilot.git
+cd qopilot
+pip install -e .
 ```
 
-Offline (no API calls, deterministic):
+---
+
+## Commands
+
+### `qopilot author` — recommend checks for a client system
+
+Takes a plain-language description of the client's AI system and outputs a prioritised list of aigrc checks with regulatory rationale.
 
 ```bash
 qopilot author --input examples/acme-system.md --offline
-qopilot interpret --report aigrc-report.json --offline
 ```
 
-## How `author` works
-
-Input: a plain-English markdown file describing the client's AI system. Example:
-
-```markdown
-# Acme FinTech chatbot
-
-A customer service assistant for Acme, a 150-person lending company in Ontario.
-Built on GPT-4o. Answers product questions. Handles account lookups via a
-tool-use integration with the core banking API. Does not provide financial
-advice. Regulated under OSFI E-23. European customers pending.
-```
-
-Qopilot reads that, consults the aigrc check catalogue and regulatory mappings, and produces a recommendations document with prioritised checks, the regulatory controls each one satisfies, and rationale tied to the client's stated context.
-
-## How `interpret` works
-
-Input: the JSON report produced by `aigrc check ... --report-json report.json`.
-
-Qopilot reads the structured findings, the regulatory mappings, and the target responses, and produces an audit narrative containing:
-
-1. Executive summary (three sentences for a non-technical reader)
-2. Material findings grouped by attack class
-3. Regulatory traceability matrix (which controls are affected)
-4. Prioritised remediation guidance
-5. Recommended next engagement (if applicable)
-
-The output is markdown. The same content can be pasted into Google Docs, exported to PDF, or included in a Tier 1 or Tier 2 engagement binder.
-
-## Architecture
+Output:
 
 ```
-qopilot/
-  core/
-    llm.py       Provider abstraction (Anthropic, OpenAI-compatible, offline)
-    prompts/     Versioned prompt templates as text files
-    schemas.py   Pydantic output schemas for structured generation
-  author/        Reads system description, produces check recommendations
-  interpret/     Reads aigrc report, produces business narrative
-  cli.py         typer CLI
+Provider: offline
+Recommendations written to: examples/acme-system.qopilot-recs.md
+
+Recommended checks (3):
+  - prompt-injection  [LIVE]  priority: high
+  - pii-leakage       [PLANNED]  priority: high
+  - topic-boundary    [PLANNED]  priority: medium
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design decisions.
+With an LLM provider:
 
-## Data handling
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+qopilot author --input examples/acme-system.md
+```
 
-Qopilot sends the content of the input file (system description or aigrc report) to your configured LLM provider. By default it sends nothing else. The tool never phones home, never collects telemetry, and never retains input data after the command exits.
+---
 
-For environments where no data may leave the client network, use `--offline`. The offline mode uses a deterministic template-based generator. The output is less polished than the LLM version but is sufficient for engineering review and internal drafts.
+### `qopilot interpret` — translate aigrc results into audit narrative
 
-## Contributing
+Takes an aigrc JSON report and produces an executive summary, material findings with remediation guidance, and regulatory traceability table.
 
-Early-stage project. Issues and discussion welcome. Please redact client data from any reports you share in issues.
+```bash
+# Generate the aigrc report first
+aigrc check prompt-injection --target mock://moderate --report-json report.json
 
-## License
+# Interpret it
+qopilot interpret --report report.json --offline
+```
 
-MIT. See [LICENSE](LICENSE).
+Output:
+
+```
+Provider: offline
+Narrative written to: report.qopilot-narrative.md
+
+Executive summary: The AI system achieved a 83.3% pass rate against the
+18-payload OWASP LLM01 taxonomy. Several attack classes produced successful
+bypasses...
+Findings: 3
+Next engagement: Tier 2 validation engagement recommended...
+```
+
+---
+
+## Options
+
+| Flag | Description |
+|------|-------------|
+| `--input PATH` | (author) Markdown file describing the client system |
+| `--report PATH` | (interpret) aigrc JSON report path |
+| `--out PATH` | Output path for the generated markdown |
+| `--offline` | Use deterministic offline renderer, no API call |
+
+---
+
+## Provider selection
+
+Qopilot auto-detects the available provider in this order:
+
+1. `--offline` flag forces the deterministic renderer
+2. `ANTHROPIC_API_KEY` in environment uses Claude
+3. `OPENAI_API_KEY` in environment uses GPT-4o-mini
+4. No key found falls back to offline renderer
+
+The offline renderer produces engineering-grade output suitable for first drafts and CI. LLM-enhanced output produces richer narratives for client-facing deliverables.
+
+---
+
+## Regulatory grounding
+
+Every recommendation and finding is grounded in specific controls:
+
+- NIST AI RMF (MEASURE 2.6, 2.7, 2.10, 2.11)
+- EU AI Act (Articles 10, 15)
+- ISO/IEC 42001 (A.6.2.6, A.7.4)
+- OWASP LLM Top 10 2025 (LLM01, LLM02, LLM06, LLM07, LLM09, LLM10)
+- PIPEDA Principle 4.7
+
+---
+
+## Typical workflow
+
+```bash
+# 1. Describe the client system
+cat > client-system.md << 'EOF'
+A GPT-4o customer service bot for a Canadian lending company.
+Handles product questions. Integrates with banking API for account lookups.
+Handles customer PII. Expanding to EU in Q3.
+EOF
+
+# 2. Get check recommendations
+qopilot author --input client-system.md --offline
+
+# 3. Run the recommended checks
+aigrc check prompt-injection --target openai://gpt-4o --report-json report.json
+
+# 4. Produce the audit narrative
+qopilot interpret --report report.json --offline
+```
+
+---
+
+## Roadmap
+
+| Version | Feature | Status | Target |
+|---------|---------|--------|--------|
+| v0.1.0 | author + interpret, offline renderer | **Live** | Released |
+| v0.2.0 | pii-leakage interpretation, multi-check narratives | Planned | Q3 2026 |
+| v0.3.0 | Drift narrative, longitudinal comparison | Planned | Q4 2026 |
+| v1.0 | Qopilot platform - multi-client, audit packaging | Planned | Q1 2027 |
+
+**RES (Resilience Engineering Scorecard)** - composite scoring layer aggregating aigrc results across all governance layers. Design begins Q3 2026.
+
+---
+
+## Development
+
+```bash
+pip install -e ".[dev]"
+pytest tests/ -v          # 7 tests, offline only, no API key required
+ruff check qopilot tests  # lint
+```
+
+---
 
 ## About
 
-Qopilot is the AI assistance layer for the Connect Smart Consulting AI assurance stack. Together, aigrc (evidence) and Qopilot (narrative) deliver audit-ready assurance outputs at a price point Ontario SMEs can actually afford.
+Qopilot is developed by [Connect Smart Consulting Inc.](https://connectsmartconsulting.com), an Ottawa-based consultancy specialising in AI governance validation, cybersecurity assurance, and quality engineering.
+
+The underlying evidence is produced by [aigrc](https://github.com/connectsmartconsulting/aigrc).
+
+- Website: [connectsmartconsulting.com](https://connectsmartconsulting.com)
+- Contact: safiuddin@connectsmartconsulting.com
+
+---
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+Copyright (c) 2026 Connect Smart Consulting Inc.
