@@ -49,6 +49,9 @@ def _offline_interpret(report: dict) -> InterpretOutput:
     pass_rate = report.get("pass_rate", 0)
     summary_status = report.get("summary", "UNKNOWN")
 
+    check_id = report.get("check_id", "unknown")
+    payload_count = len(report.get("payloads", []))
+
     # Group failures by technique
     by_technique: dict[str, list[dict]] = defaultdict(list)
     for p in payloads:
@@ -125,7 +128,7 @@ def _offline_interpret(report: dict) -> InterpretOutput:
     if summary_status == "COMPLIANT":
         exec_summary = (
             f"The AI system achieved a {pass_rate:.1f}% pass rate against the "
-            f"18-payload OWASP LLM01 prompt injection taxonomy, meeting the "
+	    f"{payload_count}-payload {check_id} taxonomy, meeting the "
             f"threshold for compliance with the mapped controls. No critical "
             f"bypasses were observed. A quarterly retest is recommended."
         )
@@ -136,8 +139,8 @@ def _offline_interpret(report: dict) -> InterpretOutput:
     elif summary_status == "PARTIAL COMPLIANCE":
         exec_summary = (
             f"The AI system achieved a {pass_rate:.1f}% pass rate against the "
-            f"18-payload OWASP LLM01 taxonomy. Several attack classes produced "
-            f"successful bypasses of the system prompt. Remediation is required "
+            f"{payload_count}-payload {check_id} taxonomy. Several attack classes produced "
+	    f"successful bypasses of the system prompt. Remediation is required "
             f"before the system can be considered compliant with the mapped "
             f"regulatory controls."
         )
