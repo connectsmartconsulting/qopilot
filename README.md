@@ -94,6 +94,29 @@ Next engagement: Tier 2 validation engagement recommended...
 | `--report PATH` | (interpret) aigrc JSON report path |
 | `--out PATH` | Output path for the generated markdown |
 | `--offline` | Use deterministic offline renderer, no API call |
+| `--vertical telecom` | **(Planned v0.2)** Apply telecom-specific prompt template, TM Forum eTOM remediation vocabulary, and CRTC-ready binder preamble |
+
+---
+
+## Planned: `--vertical telecom` (v0.2)
+
+The `--vertical telecom` flag ships with aigrc v0.2 as a single coherent telecom release. It produces three additional outputs tuned for AI-powered applications serving 3GPP-governed networks:
+
+**author command:**
+- 3GPP context paragraph naming the governing Release and design-time mandate
+- CRTC consumer protection framing for carrier-deployed AI
+- Telecom-specific risk language covering subscriber data, service continuity, and fraud vectors
+
+**interpret command:**
+- NOC workflow integration guidance for detected failures
+- SLA obligation context and TM Forum eTOM process domain references
+- CRTC reporting timeline guidance when a failure triggers notification obligation
+
+**author --format crtc:**
+- Regulatory preamble naming CRTC obligations, PIPEDA, EU AI Act Articles 14 and 50, and 3GPP TS 28.105
+- Evidence structure unchanged -- preamble is additive
+
+**Regulatory anchors:** EU AI Act Article 50, CRTC network reliability and consumer protection mandate, TM Forum Open Digital Framework, 3GPP TS 28.105.
 
 ---
 
@@ -114,11 +137,15 @@ The offline renderer produces engineering-grade output suitable for first drafts
 
 Every recommendation and finding is grounded in specific controls:
 
-- NIST AI RMF (MEASURE 2.6, 2.7, 2.10, 2.11)
-- EU AI Act (Articles 10, 15)
+- NIST AI RMF (MEASURE 2.6, 2.7, 2.10, 2.11, MANAGE 2.2, GOVERN 1.7)
+- EU AI Act (Articles 10, 14, 15, 50)
 - ISO/IEC 42001 (A.6.2.6, A.7.4)
 - OWASP LLM Top 10 2025 (LLM01, LLM02, LLM06, LLM07, LLM09, LLM10)
 - PIPEDA Principle 4.7
+- CRTC network reliability and consumer protection mandate
+- TM Forum Open Digital Framework (eTOM process domains)
+- ETSI GR SAI 002 (telecom AI security standards)
+- 3GPP TS 28.105 (AI/ML management, human oversight)
 
 ---
 
@@ -142,6 +169,19 @@ aigrc check prompt-injection --target openai://gpt-4o --report-json report.json
 qopilot interpret --report report.json --offline
 ```
 
+Telecom workflow (v0.2):
+
+```bash
+# Describe a carrier chatbot
+qopilot author --input carrier-chatbot.md --vertical telecom --offline
+
+# Run the telecom demonstration check
+aigrc check topic-boundary --target openai://gpt-4o --report-json report.json
+
+# Produce a CRTC-ready narrative
+qopilot interpret --report report.json --vertical telecom --offline
+```
+
 ---
 
 ## Roadmap
@@ -149,11 +189,11 @@ qopilot interpret --report report.json --offline
 | Version | Feature | Status | Target |
 |---------|---------|--------|--------|
 | v0.1.0 | author + interpret, offline renderer | **Live** | Released |
-| v0.2.0 | pii-leakage interpretation, multi-check narratives | Planned | Q3 2026 |
-| v0.3.0 | Drift narrative, longitudinal comparison | Planned | Q4 2026 |
-| v1.0 | Qopilot platform - multi-client, audit packaging | Planned | Q1 2027 |
+| v0.2.0 | --vertical telecom flag, topic-boundary interpretation, TM Forum eTOM vocabulary, CRTC-ready binder | Planned | Q3 2026 |
+| v0.3.0 | RES Scorecard narrative, RES Telecom Profile, human-override check narrative, longitudinal comparison | Planned | Q4 2026 |
+| v1.0 | Qopilot platform -- multi-client dashboard, continuous monitoring, telecom vertical, CRTC audit-readiness indicator | Planned | Q1 2027 |
 
-**RES (Resilience Engineering Scorecard)** - composite scoring layer aggregating aigrc results across all governance layers. Design begins Q3 2026.
+**RES (Resilience Engineering Scorecard)** -- composite scoring layer aggregating aigrc results across all five governance layers. Includes RES Telecom Profile variant with Critical weighting on PII leakage and human-override dimensions. Design begins Q3 2026.
 
 ---
 
@@ -171,7 +211,7 @@ ruff check qopilot tests  # lint
 
 Qopilot is developed by [Connect Smart Consulting Inc.](https://connectsmartconsulting.com), an Ottawa-based consultancy specialising in AI governance validation, cybersecurity assurance, and quality engineering.
 
-The underlying evidence is produced by [aigrc](https://github.com/connectsmartconsulting/aigrc).
+The underlying evidence is produced by [aigrc](https://github.com/connectsmartconsulting/aigrc). System architecture documentation is at [connectsmartconsulting/docs](https://github.com/connectsmartconsulting/docs).
 
 - Website: [connectsmartconsulting.com](https://connectsmartconsulting.com)
 - Contact: safiuddin@connectsmartconsulting.com
