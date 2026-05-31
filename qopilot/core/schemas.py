@@ -26,6 +26,7 @@ class Finding(BaseModel):
     description: str
     affected_controls: list[str]
     remediation: str
+    cr_references: list[str] = []
 
 
 class InterpretOutput(BaseModel):
